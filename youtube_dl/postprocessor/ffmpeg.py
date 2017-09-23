@@ -398,6 +398,10 @@ class FFmpegEmbedSubtitlePP(FFmpegPostProcessor):
 
 
 class FFmpegMetadataPP(FFmpegPostProcessor):
+    def __init__(self, downloader=None, metadata={}):
+        FFmpegPostProcessor.__init__(self, downloader)
+        self._provided_metadata = metadata
+
     def run(self, info):
         metadata = {}
 
@@ -409,7 +413,12 @@ class FFmpegMetadataPP(FFmpegPostProcessor):
             if not isinstance(info_list, (list, tuple)):
                 info_list = (info_list,)
             for info_f in info_list:
-                if info.get(info_f) is not None:
+                # Prioritise manually provided metadata
+                if self._provided_metadata.get(info_f) is not None:
+                    for meta_f in meta_list:
+                        metadata[meta_f] = self._provided_metadata[info_f]
+                    break
+                elif info.get(info_f) is not None:
                     for meta_f in meta_list:
                         metadata[meta_f] = info[info_f]
                     break
